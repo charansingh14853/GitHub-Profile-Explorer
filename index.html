@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Profile Explorer</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #5c2a9d;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+            transition: background-color 1s ease-in-out;
+        }
+
+        h2 {
+            color: #d8b9ff;
+        }
+
+        input {
+            width: 60%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #d8b9ff;
+            background: #ffffff;
+            color: #333;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            cursor: pointer;
+            background: #d8b9ff;
+            color: #5c2a9d;
+            font-weight: bold;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #b47cff;
+        }
+
+        #profile {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #2e1b5a;
+            border-radius: 10px;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .profile-container img {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 3px solid #d8b9ff;
+        }
+
+        .profile-container h3 {
+            margin: 0;
+            color: #d8b9ff;
+        }
+
+        .info {
+            font-size: 14px;
+            color: #ddd;
+        }
+
+        .repo-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .repo-list li {
+            background: #442f6e;
+            margin: 8px 0;
+            padding: 12px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.3s;
+        }
+
+        .repo-list li:hover {
+            background: #6a3fa0;
+        }
+
+        .repo-list a {
+            text-decoration: none;
+            color: #d8b9ff;
+            font-weight: bold;
+        }
+
+        .stars {
+            font-size: 14px;
+            color: #bbb;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>GitHub Profile Explorer</h2>
+    <input type="text" id="username" placeholder="Enter GitHub Username">
+    <br>
+    <button onclick="getGitHubProfile()">Get Profile</button>
+
+    <div id="profile"></div>
+
+    <script>
+        async function getGitHubProfile() {
+            const username = document.getElementById("username").value.trim();
+            if (!username) {
+                alert("Please enter a GitHub username!");
+                return;
+            }
+
+            try {
+                const userResponse = await fetch(`https://api.github.com/users/${username}`);
+                if (!userResponse.ok) throw new Error("GitHub profile not found!");
+                const userData = await userResponse.json();
+
+                const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?sort=updated`);
+                if (!reposResponse.ok) throw new Error("Repositories not found!");
+                const reposData = await reposResponse.json();
+
+                document.getElementById("profile").style.display = "block";
+                document.getElementById("profile").innerHTML = `
+                    <div class="profile-container">
+                        <img src="${userData.avatar_url}" alt="Profile Picture">
+                        <div>
+                            <h3>${userData.name || "Not Available"}</h3>
+                            <p class="info">${userData.bio || "No bio available"}</p>
+                            <p class="info"><strong>Followers:</strong> ${userData.followers} | <strong>Following:</strong> ${userData.following}</p>
+                            <p class="info"><strong>Location:</strong> ${userData.location || "Not Available"}</p>
+                            ${userData.blog ? `<p class="info"><a href="${userData.blog}" target="_blank">Website</a></p>` : ""}
+                            <p class="info"><strong>Public Repos:</strong> ${userData.public_repos}</p>
+                        </div>
+                    </div>
+                    <h3>Repositories:</h3>
+                    <ul class="repo-list">
+                        ${reposData.slice(0, 10).map(repo => `
+                            <li>
+                                <a href="${repo.html_url}" target="_blank">${repo.name}</a>
+                                <span class="stars">⭐ ${repo.stargazers_count}</span>
+                            </li>`).join("")}
+                    </ul>
+                `;
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById("profile").innerHTML = `<p class="error">${error.message}</p>`;
+            }
+        }
+
+        // Background Color Changing Effect Every 2 Seconds
+        const colors = ["#5c2a9d", "#7d3ac1", "#6a3fa0", "#8f4fcf"];
+        let index = 0;
+
+        function changeBackgroundColor() {
+            document.body.style.backgroundColor = colors[index];
+            index = (index + 1) % colors.length;
+        }
+
+        setInterval(changeBackgroundColor, 2000);
+    </script>
+</body>
+</html>
